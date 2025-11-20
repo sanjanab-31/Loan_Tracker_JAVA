@@ -1,0 +1,34 @@
+:root{
+    --primary: #0d6efd;
+    --success: #198754;
+    --danger: #dc3545;
+    --muted: #6c757d;
+    --bg: #f6f8fa;
+    --card: #ffffff;
+    --radius: 10px;
+}
+body{
+    font-family: Inter, "Segoe UI", Roboto, -apple-system, "Helvetica Neue", Arial;
+    background: var(--bg);
+    color: #222;
+    margin: 0;
+    -webkit-font-smoothing:antialiased;
+}
+.app-container{ padding: 1.25rem; }
+.card{ border: 0; border-radius: var(--radius); background: var(--card); box-shadow: 0 6px 20px rgba(22,28,37,0.06); }
+.card-header{ background: transparent; border-bottom: 0; }
+.btn{ transition: transform .08s ease, box-shadow .08s ease; }
+.btn:active{ transform: translateY(1px); }
+.table thead th{ font-weight:600; color:var(--muted); }
+.table tbody tr{ transition: background-color .12s ease; }
+.table tbody tr:hover{ background: #fbfbfd; }
+.summary-panel table{ width:100%; border-collapse:collapse; }
+.summary-panel th, .summary-panel td{ padding:10px 14px; border-bottom:1px solid #eef0f3; text-align:left; }
+.badge-status-paid{ background: var(--success); color: white; }
+.badge-status-pending{ background: #ffc107; color: #222; }
+.muted{ color:var(--muted); }
+.text-muted { color: var(--muted) !important; }
+.btn .spinner-border{ width: 1rem; height: 1rem; border-width: .12rem; margin-left:.5rem; }
+@media (max-width: 576px){
+    .table-responsive{ overflow-x:auto; }
+}

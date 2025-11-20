@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <title>New Loan Created</title>
+</head>
+<body>
+    <p>Hi <span th:text="${name}">User</span>,</p>
+    <p>Your loan (ID: <strong th:text="${loanId}">0</strong>) has been created.</p>
+    <p>EMI Amount: <strong th:text="${emiAmount}">0</strong><br/>
+       Tenure (months): <strong th:text="${tenure}">0</strong></p>
+    <p>Log in to your dashboard to view the repayment schedule.</p>
+    <p>Regards,<br/>Loan Tracker Team</p>
+</body>
+</html>
