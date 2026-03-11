@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout(~{::section}, 'Global Portfolios', 'loans')}">
+
+<head>
+</head>
+
+<body>
+    <section>
+        <div class="card-table-wrapper">
+            <div class="card-table-header">
+                <h2 class="table-title">Global Loan Portfolios</h2>
+                <div style="font-size: 0.875rem; color: var(--secondary);">
+                    Viewing all active disbursements across the platform
+                </div>
+            </div>
+            <div style="overflow-x: auto;">
+                <table class="custom-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Borrower</th>
+                            <th>Principal</th>
+                            <th>Tenure</th>
+                            <th>Monthly EMI</th>
+                            <th>Remaining Balance</th>
+                            <th style="text-align: right;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="loan : ${loans}">
+                            <td>
+                                <span class="fw-700" th:text="${'L' + loan.loanId}">L1</span>
+                            </td>
+                            <td>
+                                <div style="display: flex; flex-direction: column;">
+                                    <span class="fw-600" th:text="${loan.user.name}">John Doe</span>
+                                    <span style="font-size: 0.75rem; color: var(--secondary);"
+                                        th:text="${loan.loanType}">Home Loan</span>
+                                </div>
+                            </td>
+                            <td class="fw-600">
+                                <span
+                                    th:text="${'₹' + #numbers.formatDecimal(loan.principal, 1, 'COMMA', 2, 'POINT')}">₹10,000.00</span>
+                            </td>
+                            <td th:text="${loan.tenureMonths + ' Mo'}">12 Mo</td>
+                            <td class="fw-600" style="color: var(--primary);">
+                                <span
+                                    th:text="${'₹' + #numbers.formatDecimal(loan.emiAmount, 1, 'COMMA', 2, 'POINT')}">₹1,000.00</span>
+                            </td>
+                            <td class="fw-600">
+                                <span th:classappend="${loan.remainingBalance > 0 ? 'text-danger' : 'text-success'}"
+                                    th:text="${'₹' + #numbers.formatDecimal(loan.remainingBalance, 1, 'COMMA', 2, 'POINT')}">₹5,000.00</span>
+                            </td>
+                            <td style="text-align: right;">
+                                <a th:href="@{'/loan/' + ${loan.loanId} + '/emipayment'}" class="btn-outline"
+                                    title="View Details">
+                                    <i data-lucide="eye" style="width: 16px; height: 16px;"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(loans)}">
+                            <td colspan="7" style="text-align: center; color: var(--secondary); padding: 4rem;">
+                                No active loans found in the system.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+</body>
+
+</html>

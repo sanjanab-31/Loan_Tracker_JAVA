@@ -1,62 +1,73 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout(~{::section}, 'Manage Loans', 'loans')}">
+
 <head>
-    <title>Loans</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
+
 <body>
-<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom shadow-sm">
-    <div class="container">
-        <a class="navbar-brand fw-bold" th:href="@{/}">LoanTracker</a>
-        <div class="collapse navbar-collapse" id="navMenu">
-            <ul class="navbar-nav ms-auto">
-                <li class="nav-item"><a class="nav-link" th:href="@{/}">Dashboard</a></li>
-            </ul>
+    <section>
+        <div class="card-table-wrapper">
+            <div class="card-table-header">
+                <h2 class="table-title">Loan Portfolios</h2>
+                <a th:if="${not #lists.isEmpty(loans)}" th:href="@{/loans/new(userId=${loans[0].user.userId})}"
+                    class="btn-primary">
+                    <i data-lucide="plus-circle" style="width: 18px; height: 18px;"></i>
+                    <span>New Loan</span>
+                </a>
+            </div>
+            <div style="overflow-x: auto;">
+                <table class="custom-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Principal</th>
+                            <th>ROI</th>
+                            <th>Tenure</th>
+                            <th>Monthly EMI</th>
+                            <th>Total Payable</th>
+                            <th style="text-align: right;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="loan : ${loans}">
+                            <td th:text="${'L' + loan.loanId}">L1</td>
+                            <td class="fw-600" th:text="${'₹' + loan.principal}">₹10,000</td>
+                            <td th:text="${loan.interestRate + '%'}">12%</td>
+                            <td th:text="${loan.tenureMonths + ' Mo'}">12 Mo</td>
+                            <td class="fw-600" style="color: var(--primary);" th:text="${'₹' + loan.emiAmount}">₹933.33
+                            </td>
+                            <td th:text="${'₹' + loan.totalPayable}">₹11,200</td>
+                            <td style="text-align: right;">
+                                <a th:href="@{'/loan/' + ${loan.loanId} + '/emipayment'}" class="btn-outline">
+                                    <i data-lucide="calendar"
+                                        style="width: 16px; height: 16px; vertical-align: middle;"></i>
+                                    <span>EMI Schedule</span>
+                                </a>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(loans)}">
+                            <td colspan="7" style="text-align: center; padding: 4rem; color: var(--secondary);">
+                                <i data-lucide="file-warning"
+                                    style="width: 48px; height: 48px; margin-bottom: 1rem; opacity: 0.5;"></i>
+                                <p>No loan records found for this user.</p>
+                                <div style="margin-top: 1.5rem;" th:if="${param.userId}">
+                                    <a th:href="@{/loans/new(userId=${param.userId})}" class="btn-primary">Disburse
+                                        First Loan</a>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
-    </div>
-</nav>
-<div class="container app-container my-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="h5 mb-0">Loans</h2>
-        <a th:if="${#lists.isEmpty(loans) == false}" class="btn btn-success" th:href="@{/loans/new(userId=${loans[0].user.userId})}">Create Loan</a>
-    </div>
-    <div class="card shadow-sm">
-        <div class="card-body p-0">
-            <table class="table table-striped mb-0">
-                <thead class="table-light">
-                <tr>
-                    <th>Loan ID</th>
-                    <th>Principal</th>
-                    <th>Interest Rate</th>
-                    <th>Tenure (Months)</th>
-                    <th>EMI Amount</th>
-                    <th>Total Payable</th>
-                    <th>Action</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr th:each="loan : ${loans}">
-                    <td th:text="${loan.loanId}"></td>
-                    <td th:text="${loan.principal}"></td>
-                    <td th:text="${loan.interestRate}"></td>
-                    <td th:text="${loan.tenureMonths}"></td>
-                    <td th:text="${loan.emiAmount}"></td>
-                    <td th:text="${loan.totalPayable}"></td>
-                    <td>
-                        <a class="btn btn-sm btn-outline-primary" th:href="@{'/loan/' + ${loan.loanId} + '/emipayment'}">View EMIs</a>
-                    </td>
-                </tr>
-                <tr th:if="${#lists.isEmpty(loans)}">
-                    <td colspan="7" class="text-center">No loans for this user yet.</td>
-                </tr>
-                </tbody>
-            </table>
+
+        <div style="margin-top: 2rem;">
+            <a th:href="@{/}" class="btn-outline">
+                <i data-lucide="arrow-left" style="width: 16px; height: 16px; vertical-align: middle;"></i>
+                <span>Back to All Users</span>
+            </a>
         </div>
-    </div>
-    <div class="mt-3">
-        <a th:href="@{/}" class="btn btn-secondary">← Back to Dashboard</a>
-    </div>
-</div>
+    </section>
 </body>
+
 </html>

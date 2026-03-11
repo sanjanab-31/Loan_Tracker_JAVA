@@ -17,6 +17,7 @@ public class PageController {
     @GetMapping("/")
     public String index(Model model) {
         model.addAttribute("users", userService.getAllUsers());
+        model.addAttribute("stats", loanService.getGlobalSummary());
         return "index";
     }
     @GetMapping("/users/new")
@@ -27,13 +28,28 @@ public class PageController {
     @PostMapping("/users")
     public String createUser(@ModelAttribute User user) {
         userService.createUser(user);
-        // After creating a user, redirect to main users page
-        return "redirect:/";
+        return "redirect:/?success=User+added+successfully";
+    }
+
+    @GetMapping("/users/edit/{id}")
+    public String editUserForm(@PathVariable Long id, Model model) {
+        model.addAttribute("user", userService.getUserById(id));
+        return "user-form";
+    }
+
+    @PostMapping("/users/delete/{id}")
+    public String deleteUser(@PathVariable Long id) {
+        userService.deleteUser(id);
+        return "redirect:/?success=User+deleted+successfully";
     }
     @GetMapping("/loans")
-    public String loansByUser(@RequestParam Long userId, Model model) {
-        model.addAttribute("loans", loanService.getLoansByUserId(userId));
-        return "loans";
+    public String loansByUser(@RequestParam(required = false) Long userId, Model model) {
+        if (userId != null) {
+            model.addAttribute("loans", loanService.getLoansByUserId(userId));
+            return "loans";
+        }
+        model.addAttribute("loans", loanService.getAllLoans());
+        return "loans-all";
     }
     @GetMapping("/loans/new")
     public String newLoanForm(@RequestParam Long userId, Model model) {
@@ -45,6 +61,12 @@ public class PageController {
     @PostMapping("/loans")
     public String createLoan(@ModelAttribute Loan loan) {
         loanService.createLoan(loan);
-        return "redirect:/";
+        return "redirect:/?success=Loan+disbursed+successfully";
+    }
+
+    @GetMapping("/reports")
+    public String reports(Model model) {
+        model.addAttribute("report", loanService.getReportSummary());
+        return "reports";
     }
 }

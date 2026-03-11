@@ -10,4 +10,5 @@ public interface EMIPaymentRepository extends JpaRepository<EMIPayment, Long> {
     List<EMIPayment> findByLoanOrderByDueDateAsc(Loan loan);
     List<EMIPayment> findByLoan_LoanId(Long loanId);
     List<EMIPayment> findByStatusAndDueDateBetween(String status, LocalDate start, LocalDate end);
+    List<EMIPayment> findAllByOrderByDueDateAsc();
 }

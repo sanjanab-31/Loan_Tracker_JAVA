@@ -179,6 +179,66 @@ public class LoanService {
                 .nextDueDate(nextDueDate)
                 .build();
     }
+    public List<Loan> getAllLoans() {
+        return loanRepository.findAll();
+    }
+
+    public Map<String, Object> getGlobalSummary() {
+        List<Loan> allLoans = loanRepository.findAll();
+        List<User> allUsers = userRepository.findAll();
+        
+        BigDecimal totalPrincipal = allLoans.stream()
+                .map(Loan::getPrincipal)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+                
+        BigDecimal totalRemaining = allLoans.stream()
+                .map(Loan::getRemainingBalance)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+                
+        long pendingEmis = emiPaymentRepository.findAll().stream()
+                .filter(p -> "PENDING".equalsIgnoreCase(p.getStatus()))
+                .count();
+
+        Map<String, Object> stats = new HashMap<>();
+        stats.put("totalUsers", allUsers.size());
+        stats.put("totalLoans", allLoans.size());
+        stats.put("totalPrincipal", totalPrincipal);
+        stats.put("totalRemaining", totalRemaining);
+        stats.put("pendingEmis", pendingEmis);
+        return stats;
+    }
+
+    public Map<String, Object> getReportSummary() {
+        List<Loan> loans = loanRepository.findAll();
+        List<EMIPayment> payments = emiPaymentRepository.findAll();
+
+        BigDecimal totalDisbursed = loans.stream()
+                .map(Loan::getTotalPayable)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal totalCollected = payments.stream()
+                .filter(p -> "PAID".equalsIgnoreCase(p.getStatus()))
+                .map(p -> p.getAmountPaid() != null ? p.getAmountPaid() : BigDecimal.ZERO)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal totalPending = payments.stream()
+                .filter(p -> "PENDING".equalsIgnoreCase(p.getStatus()))
+                .map(p -> p.getLoan().getEmiAmount()) // Using EMI amount as proxy for pending
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        double collectionRate = totalDisbursed.compareTo(BigDecimal.ZERO) > 0 
+                ? totalCollected.divide(totalDisbursed, 4, RoundingMode.HALF_UP).multiply(BigDecimal.valueOf(100)).doubleValue()
+                : 0.0;
+
+        Map<String, Object> report = new HashMap<>();
+        report.put("totalDisbursed", totalDisbursed);
+        report.put("totalCollected", totalCollected);
+        report.put("totalPending", totalPending);
+        report.put("collectionRate", collectionRate);
+        report.put("payments", emiPaymentRepository.findAllByOrderByDueDateAsc());
+        return report;
+    }
+
     public Loan findLoanById(Long loanId) {
         return loanRepository.findById(loanId)
                 .orElseThrow(() -> new IllegalArgumentException("Loan not found with ID: " + loanId));

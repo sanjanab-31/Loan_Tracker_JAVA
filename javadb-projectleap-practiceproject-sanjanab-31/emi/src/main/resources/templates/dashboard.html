@@ -1,182 +1,139 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <title>Loan Dashboard</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" th:href="@{/css/style.css}">
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        body { background-color: #f8f9fa; }
-        canvas { height: 300px !important; }
-        h2, h4, h5 { font-family: 'Segoe UI', sans-serif; }
-    </style>
-</head>
-<body class="bg-light">
-<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom shadow-sm">
-    <div class="container">
-        <a class="navbar-brand fw-bold" th:href="@{/}">LoanTracker</a>
-    </div>
-</nav>
-<div class="container app-container mt-4">
-    <h2 class="text-center mb-4">Loan Dashboard</h2>
-    <div class="card p-3 mb-4 shadow-sm">
-        <h5>User Information</h5>
-        <p><strong>Name:</strong> <span th:text="${user.name}">John Doe</span></p>
-        <p><strong>Email:</strong> <span th:text="${user.email}">john@example.com</span></p>
-        <p><strong>Contact:</strong> <span th:text="${user.contactNo}">9999999999</span></p>
-    </div>
+<html xmlns:th="http://www.thymeleaf.org"
+    th:replace="~{layout :: layout(~{::section}, 'Account Insight', 'dashboard')}">
 
-    <!-- ✅ LOAN LIST -->
-    <div class="card shadow-sm">
-        <div class="card-header bg-primary text-white">
-            <h5 class="mb-0">Your Loans</h5>
-        </div>
-        <div class="card-body p-0">
-            <table class="table table-striped mb-0">
-                <thead class="table-light">
-                <tr>
-                    <th>ID</th>
-                    <th>Type</th>
-                    <th>Principal</th>
-                    <th>EMI</th>
-                    <th>Total Payable</th>
-                    <th>Remaining</th>
-                    <th>Start Date</th>
-                    <th colspan="2" class="text-center">Actions</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr th:each="loan : ${loans}" th:if="${loan != null}">
-                    <td th:text="${loan.loanId}">1</td>
-                    <td th:text="${loan.loanType}">Home</td>
-                    <td th:text="${loan.principal}">500000</td>
-                    <td th:text="${loan.emiAmount}">12000</td>
-                    <td th:text="${loan.totalPayable}">600000</td>
-                    <td th:text="${loan.remainingBalance}">300000</td>
-                    <td th:text="${loan.startDate}">2024-01-01</td>
-                    <td>
-                        <button class="btn btn-sm btn-outline-primary"
-                                th:attr="onclick=|showSummary(${loan.loanId})|"
-                                data-bs-toggle="modal"
-                                data-bs-target="#summaryModal">
-                            View Summary
-                        </button>
-                    </td>
-                    <td>
-                        <a th:href="@{/api/emipayments/view/{loanId}(loanId=${loan.loanId})}"
-                           class="btn btn-sm btn-outline-info">
-                            View EMIs
-                        </a>
-                    </td>
-                </tr>
-                <tr th:if="${#lists.isEmpty(loans)}">
-                    <td colspan="9" class="text-center text-muted py-3">
-                        No loans available for this user.
-                    </td>
-                </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
-<div class="modal fade" id="summaryModal" tabindex="-1" aria-labelledby="summaryModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title" id="summaryModalLabel">Loan Summary</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <p><strong>Total EMIs:</strong> <span id="totalEmis">-</span></p>
-                <p><strong>Paid EMIs:</strong> <span id="paidEmis">-</span></p>
-                <p><strong>Total Paid:</strong> ₹<span id="totalPaid">0.00</span></p>
-                <p><strong>Remaining Balance:</strong> ₹<span id="remainingBalance">0.00</span></p>
-                <p><strong>Next Due Date:</strong> <span id="nextDueDate">—</span></p>
-            </div>
-        </div>
-    </div>
-</div>
-<div class="container mt-5">
-    <h4 class="text-center mb-4">📊 Loan Insights</h4>
-    <div class="row">
-        <div class="col-md-6 mb-4">
-            <div class="card shadow-sm">
-                <div class="card-header bg-primary text-white text-center">
-                    Loan Progress (₹ Paid vs Remaining)
+<head>
+</head>
+
+<body>
+    <section>
+        <div class="stats-grid">
+            <!-- Summary Stats -->
+            <div class="stat-card">
+                <div>
+                    <p class="stat-label">Total Outstanding</p>
+                    <p class="stat-value"
+                        th:text="${'₹' + #numbers.formatDecimal(summary.remainingBalance, 1, 'COMMA', 2, 'POINT')}">
+                        ₹0.00</p>
                 </div>
-                <div class="card-body">
-                    <canvas id="loanProgressChart"></canvas>
+                <div class="stat-trend trend-down">
+                    <i data-lucide="alert-circle" style="width: 14px; height: 14px; vertical-align: middle;"></i>
+                    <span>Remaining Principal + Interest</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div>
+                    <p class="stat-label">EMI Progress</p>
+                    <p class="stat-value"><span th:text="${summary.paidEmis}">0</span> / <span
+                            th:text="${summary.totalEmis}">0</span></p>
+                </div>
+                <div class="stat-trend trend-up">
+                    <i data-lucide="check-square" style="width: 14px; height: 14px; vertical-align: middle;"></i>
+                    <span>Installments Completed</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div>
+                    <p class="stat-label">Next Payment</p>
+                    <p class="stat-value" th:text="${summary.nextDueDate ?: 'No Pending'}">2024-03-25</p>
+                </div>
+                <div class="stat-trend" style="color: var(--warning);">
+                    <i data-lucide="calendar" style="width: 14px; height: 14px; vertical-align: middle;"></i>
+                    <span>Upcoming Due Date</span>
                 </div>
             </div>
         </div>
-        <div class="col-md-6 mb-4">
-            <div class="card shadow-sm">
-                <div class="card-header bg-success text-white text-center">
-                    EMI Status (Paid vs Pending)
+
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; margin-top: 2rem;">
+            <!-- Active Loans -->
+            <div class="card-table-wrapper">
+                <div class="card-table-header">
+                    <h2 class="table-title">Active Loan Portfolios</h2>
                 </div>
-                <div class="card-body">
-                    <canvas id="emiStatusChart"></canvas>
+                <table class="custom-table">
+                    <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th>Principal</th>
+                            <th>EMI</th>
+                            <th>Remaining</th>
+                            <th style="text-align: right;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="loan : ${loans}">
+                            <td>
+                                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <div
+                                        style="width: 8px; height: 8px; border-radius: 50%; background: var(--primary);">
+                                    </div>
+                                    <span th:text="${loan.loanType}">Home</span>
+                                </div>
+                            </td>
+                            <td class="fw-600" th:text="${'₹' + loan.principal}">₹50k</td>
+                            <td th:text="${'₹' + loan.emiAmount}">₹2k</td>
+                            <td style="color: var(--danger); font-weight: 600;"
+                                th:text="${'₹' + loan.remainingBalance}">₹10k</td>
+                            <td style="text-align: right;">
+                                <a th:href="@{'/loan/' + ${loan.loanId} + '/emipayment'}" class="btn-outline">
+                                    <i data-lucide="eye" style="width: 14px; height: 14px; vertical-align: middle;"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(loans)}">
+                            <td colspan="5" style="text-align: center; color: var(--secondary); padding: 2rem;">No
+                                active loans.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Visual Insight -->
+            <div class="card-table-wrapper" style="padding: 1.5rem;">
+                <h2 class="table-title" style="margin-bottom: 1.5rem;">Credit Health</h2>
+                <div
+                    style="height: 200px; display: flex; align-items: center; justify-content: center; position: relative;">
+                    <canvas id="healthChart"></canvas>
+                </div>
+                <div style="margin-top: 1.5rem;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <span style="font-size: 0.75rem; color: var(--secondary);">Repayment Ratio</span>
+                        <span style="font-size: 0.75rem; font-weight: 700; color: var(--success);"
+                            th:text="${(summary.totalEmis > 0 ? (summary.paidEmis * 100 / summary.totalEmis) : 0) + '%'}">75%</span>
+                    </div>
+                    <div style="width: 100%; height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden;">
+                        <div
+                            th:style="'width:' + (summary.totalEmis > 0 ? (summary.paidEmis * 100 / summary.totalEmis) : 0) + '%; height: 100%; background: var(--success);'">
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-</div>
-<script th:inline="javascript">
-    /*<![CDATA[*/
-    var paidAmount = /*[[${summary != null ? summary.totalPaid : 0}]]*/ 0;
-    var remainingAmount = /*[[${summary != null ? summary.remainingBalance : 0}]]*/ 0;
-    var totalEmis = /*[[${summary != null ? summary.totalEmis : 0}]]*/ 0;
-    var paidEmis = /*[[${summary != null ? summary.paidEmis : 0}]]*/ 0;
-    /*]]>*/
-</script>
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const emiPending = (totalEmis || 0) - (paidEmis || 0);
-        const ctx1 = document.getElementById('loanProgressChart');
-        if (ctx1) {
-            new Chart(ctx1, {
+
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script th:inline="javascript">
+            const paid = /*[[${summary.totalPaid}]]*/ 0;
+            const remaining = /*[[${summary.remainingBalance}]]*/ 0;
+
+            new Chart(document.getElementById('healthChart'), {
                 type: 'doughnut',
                 data: {
                     labels: ['Paid', 'Remaining'],
-                    datasets: [{ data: [paidAmount, remainingAmount], backgroundColor: ['#198754', '#dc3545'] }]
+                    datasets: [{
+                        data: [paid, remaining],
+                        backgroundColor: ['#10b981', '#f1f5f9'],
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
                 },
-                options: { plugins: { legend: { position: 'bottom' } } }
+                options: {
+                    cutout: '80%',
+                    plugins: { legend: { display: false } },
+                    maintainAspectRatio: false
+                }
             });
-        }
-        const ctx2 = document.getElementById('emiStatusChart');
-        if (ctx2) {
-            new Chart(ctx2, {
-                type: 'pie',
-                data: {
-                    labels: ['Paid EMIs', 'Pending EMIs'],
-                    datasets: [{ data: [paidEmis, emiPending], backgroundColor: ['#0d6efd', '#ffc107'] }]
-                },
-                options: { plugins: { legend: { position: 'bottom' } } }
-            });
-        }
-    });
-    async function showSummary(loanId) {
-        try {
-            const res = await axios.get(`/api/loans/${loanId}/summary`);
-            const data = res.data;
-            const setText = (id, value) => {
-                const el = document.getElementById(id);
-                if (el) el.textContent = value ?? '-';
-            };
-            setText('totalEmis', data.totalEmis);
-            setText('paidEmis', data.paidEmis);
-            setText('totalPaid', data.totalPaid ? data.totalPaid.toFixed(2) : '0.00');
-            setText('remainingBalance', data.remainingBalance ? data.remainingBalance.toFixed(2) : '0.00');
-            setText('nextDueDate', data.nextDueDate ?? '—');
-        } catch (err) {
-            console.error('Error fetching loan summary:', err);
-            alert('Could not fetch loan summary.');
-        }
-    }
-</script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-</script>
+        </script>
+    </section>
 </body>
+
 </html>

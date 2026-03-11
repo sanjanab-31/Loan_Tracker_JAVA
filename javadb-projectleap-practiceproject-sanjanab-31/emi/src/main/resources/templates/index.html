@@ -1,70 +1,202 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout(~{::section}, 'Dashboard', 'dashboard')}">
+
 <head>
-    <meta charset="UTF-8">
-    <title>Loan Tracker Dashboard</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" th:href="@{/css/style.css}">
-    <style> .card-actions { display:flex; gap:8px; }</style>
 </head>
+
 <body>
-<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom shadow-sm">
-    <div class="container">
-        <a class="navbar-brand fw-bold" th:href="@{/}">LoanTracker</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu" aria-controls="navMenu" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navMenu">
-            <ul class="navbar-nav ms-auto">
-                <li class="nav-item"><a class="nav-link" th:href="@{/}">Dashboard</a></li>
-                <li class="nav-item"><a class="nav-link" th:href="@{/loans}">Loans</a></li>
-                <li class="nav-item"><a class="nav-link" th:href="@{/}">Reports</a></li>
-            </ul>
+    <section>
+        <!-- Statistics Grid -->
+        <div class="stats-grid">
+            <div class="stat-card users">
+                <div>
+                    <p class="stat-label">Total Users</p>
+                    <p class="stat-value" th:text="${stats.totalUsers}">0</p>
+                </div>
+                <div class="stat-trend trend-up">
+                    <i data-lucide="users" style="width: 14px; height: 14px; vertical-align: middle;"></i>
+                    <span>Active Platform Users</span>
+                </div>
+            </div>
+            <div class="stat-card loans">
+                <div>
+                    <p class="stat-label">Active Loans</p>
+                    <p class="stat-value" th:text="${stats.totalLoans}">0</p>
+                </div>
+                <div class="stat-trend trend-up">
+                    <i data-lucide="credit-card" style="width: 14px; height: 14px; vertical-align: middle;"></i>
+                    <span>Disbursed Contracts</span>
+                </div>
+            </div>
+            <div class="stat-card principal">
+                <div>
+                    <p class="stat-label">Total Principal</p>
+                    <p class="stat-value"
+                        th:text="${'₹' + #numbers.formatDecimal(stats.totalPrincipal, 1, 'COMMA', 2, 'POINT')}">₹0.00
+                    </p>
+                </div>
+                <div class="stat-trend" style="color: var(--secondary);">
+                    <i data-lucide="trending-up" style="width: 14px; height: 14px; vertical-align: middle;"></i>
+                    <span>Aggregated Capital</span>
+                </div>
+            </div>
+            <div class="stat-card pending" th:classappend="${stats.pendingEmis > 0 ? 'warning-glow' : ''}">
+                <div>
+                    <p class="stat-label">Pending EMIs</p>
+                    <p class="stat-value" th:classappend="${stats.pendingEmis > 0 ? 'text-warning' : ''}"
+                        th:text="${stats.pendingEmis}">0</p>
+                </div>
+                <div class="stat-trend" th:classappend="${stats.pendingEmis > 0 ? 'trend-down' : ''}"
+                    style="color: var(--secondary);">
+                    <i th:data-lucide="${stats.pendingEmis > 0 ? 'alert-triangle' : 'clock'}"
+                        style="width: 14px; height: 14px; vertical-align: middle;"></i>
+                    <span th:text="${stats.pendingEmis > 0 ? 'Action Required' : 'Everything Clear'}">Action
+                        Required</span>
+                </div>
+            </div>
         </div>
-    </div>
-</nav>
-<div class="container app-container my-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h1 class="h3 mb-0">Loan Tracker</h1>
-        <div>
-            <a class="btn btn-primary me-2" th:href="@{/users/new}">Create User</a>
+
+        <!-- Users Table -->
+        <div class="card-table-wrapper">
+            <div class="card-table-header">
+                <div>
+                    <h2 class="table-title">Platform Users</h2>
+                    <div style="margin-top: 0.5rem; position: relative; max-width: 300px;">
+                        <i data-lucide="search"
+                            style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; color: var(--secondary);"></i>
+                        <input type="text" id="userSearch" placeholder="Search by name, email..."
+                            style="padding: 0.625rem 1rem 0.625rem 2.5rem; border: 1px solid var(--border); border-radius: var(--radius-md); font-size: 0.8125rem; width: 100%; transition: all 0.2s;"
+                            onkeyup="filterUsers()">
+                    </div>
+                </div>
+                <a th:href="@{/users/new}" class="btn-primary">
+                    <i data-lucide="user-plus" style="width: 18px; height: 18px;"></i>
+                    <span>Add User</span>
+                </a>
+            </div>
+            <div style="overflow-x: auto;">
+                <table class="custom-table">
+                    <thead>
+                        <tr>
+                            <th>User ID</th>
+                            <th>Name</th>
+                            <th>Email Address</th>
+                            <th>Contact</th>
+                            <th style="text-align: right;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="user : ${users}">
+                            <td class="fw-600">
+                                <span class="badge" style="background: var(--light); color: var(--secondary);"
+                                    th:text="${'#' + user.userId}">#1</span>
+                            </td>
+                            <td>
+                                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                    <div class="avatar-circle" style="background: var(--primary);">
+                                        <span th:text="${#strings.substring(user.name, 0, 1).toUpperCase()}">J</span>
+                                    </div>
+                                    <span class="fw-600" th:text="${user.name}">John Doe</span>
+                                </div>
+                            </td>
+                            <td th:text="${user.email}">john@example.com</td>
+                            <td th:text="${user.contactNo}">+91 9876543210</td>
+                            <td style="text-align: right;">
+                                <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                                    <a th:href="@{/dashboard/{id}(id=${user.userId})}" class="btn-outline"
+                                        title="View Account Dashboard">
+                                        <i data-lucide="layout-dashboard" style="width: 16px; height: 16px;"></i>
+                                    </a>
+                                    <a th:href="@{/loans(userId=${user.userId})}" class="btn-outline"
+                                        title="View EMI Schedule">
+                                        <i data-lucide="clock-arrow-up" style="width: 16px; height: 16px;"></i>
+                                    </a>
+                                    <a th:href="@{'/users/edit/' + ${user.userId}}" class="btn-outline"
+                                        style="color: var(--primary); border-color: rgba(37, 99, 235, 0.2);"
+                                        title="Edit User Info">
+                                        <i data-lucide="pencil" style="width: 16px; height: 16px;"></i>
+                                    </a>
+                                    <button th:onclick="'confirmDelete(' + ${user.userId} + ')'" class="btn-outline"
+                                        style="color: var(--danger); border-color: rgba(239, 68, 68, 0.2);"
+                                        title="Delete User">
+                                        <i data-lucide="trash-2" style="width: 16px; height: 16px;"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(users)}">
+                            <td colspan="5" style="text-align: center; padding: 4rem; color: var(--secondary);">
+                                <div style="display: flex; flex-direction: column; align-items: center; gap: 1rem;">
+                                    <i data-lucide="users" style="width: 64px; height: 64px; opacity: 0.2;"></i>
+                                    <p class="fw-600">No users found in the system yet.</p>
+                                    <p style="font-size: 0.8125rem;">Start by adding your first borrower.</p>
+                                    <a th:href="@{/users/new}" class="btn-primary" style="margin-top: 0.5rem;">
+                                        <i data-lucide="user-plus" style="width: 18px; height: 18px;"></i>
+                                        <span>Add User</span>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
-    </div>
-    <div class="card shadow-sm">
-        <div class="card-header">
-            <strong>Users</strong>
+
+        <!-- Custom Delete Confirmation Modal -->
+        <div id="deleteModal"
+            style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 10000; align-items: center; justify-content: center;">
+            <div class="form-card" style="max-width: 400px; padding: 2.5rem; text-align: center;">
+                <div
+                    style="background: #fee2e2; width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+                    <i data-lucide="alert-triangle" style="color: var(--danger); width: 32px; height: 32px;"></i>
+                </div>
+                <h3 style="font-weight: 700; font-size: 1.25rem; margin-bottom: 0.75rem;">Are you absolutely sure?</h3>
+                <p style="color: var(--secondary); font-size: 0.875rem; margin-bottom: 2rem;">This action cannot be
+                    undone. All associated loans and EMI data for this user will be permanently deleted.</p>
+                <form id="deleteForm" method="post">
+                    <div style="display: flex; gap: 1rem;">
+                        <button type="button" onclick="closeDeleteModal()" class="btn-outline"
+                            style="flex: 1;">Cancel</button>
+                        <button type="submit" class="btn-primary"
+                            style="flex: 1; background: var(--danger); border: none;">Yes, Delete User</button>
+                    </div>
+                </form>
+            </div>
         </div>
-        <div class="card-body p-0">
-            <table class="table table-hover mb-0">
-                <thead class="table-light">
-                <tr>
-                    <th>User ID</th>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Contact</th>
-                    <th>Actions</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr th:each="user : ${users}">
-                    <td th:text="${user.userId}"></td>
-                    <td th:text="${user.name}"></td>
-                    <td th:text="${user.email}"></td>
-                    <td th:text="${user.contactNo}"></td>
-                    <td>
-                        <div class="card-actions">
-                            <a class="btn btn-sm btn-outline-primary" th:href="@{/loans(userId=${user.userId})}">View Loans</a>
-                            <a class="btn btn-sm btn-outline-success" th:href="@{/loans/new(userId=${user.userId})}">Create Loan</a>
-                        </div>
-                    </td>
-                </tr>
-                <tr th:if="${#lists.isEmpty(users)}">
-                    <td colspan="5" class="text-center">No users found. Create one to get started.</td>
-                </tr>
-                </tbody>
-            </table>
+
+        <script th:inline="javascript">
+            function filterUsers() {
+                const query = document.getElementById('userSearch').value.toLowerCase();
+                const rows = document.querySelectorAll('.custom-table tbody tr:not(:last-child)');
+                rows.forEach(row => {
+                    const text = row.innerText.toLowerCase();
+                    row.style.display = text.includes(query) ? '' : 'none';
+                });
+            }
+
+            function confirmDelete(userId) {
+                const modal = document.getElementById('deleteModal');
+                const form = document.getElementById('deleteForm');
+                form.action = '/users/delete/' + userId;
+                modal.style.display = 'flex';
+            }
+
+            function closeDeleteModal() {
+                document.getElementById('deleteModal').style.display = 'none';
+            }
+
+            // Success Toast from URL params
+            window.addEventListener('load', () => {
+                const params = new URLSearchParams(window.location.search);
+                if (params.has('success')) {
+                    showToast(params.get('success'));
+                }
+            });
+        </script>
+        </table>
         </div>
-    </div>
-</div>
+        </div>
+    </section>
 </body>
+
 </html>

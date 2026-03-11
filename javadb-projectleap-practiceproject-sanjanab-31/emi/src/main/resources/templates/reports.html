@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+    th:replace="~{layout :: layout(~{::section}, 'Collections Report', 'reports')}">
+
+<head>
+</head>
+
+<body>
+    <section>
+        <!-- Collection Stats Grid -->
+        <div class="stats-grid">
+            <div class="stat-card principal">
+                <div>
+                    <p class="stat-label">Total Disbursed</p>
+                    <p class="stat-value"
+                        th:text="${'₹' + #numbers.formatDecimal(report.totalDisbursed, 1, 'COMMA', 2, 'POINT')}">₹0.00
+                    </p>
+                </div>
+                <div class="stat-trend" style="color: var(--secondary);">
+                    <i data-lucide="arrow-up-right" style="width: 14px; height: 14px; vertical-align: middle;"></i>
+                    <span>Aggregated Commitments</span>
+                </div>
+            </div>
+            <div class="stat-card loans">
+                <div>
+                    <p class="stat-label">Total Collected</p>
+                    <p class="stat-value"
+                        th:text="${'₹' + #numbers.formatDecimal(report.totalCollected, 1, 'COMMA', 2, 'POINT')}">₹0.00
+                    </p>
+                </div>
+                <div class="stat-trend trend-up">
+                    <i data-lucide="check-circle" style="width: 14px; height: 14px; vertical-align: middle;"></i>
+                    <span th:text="${#numbers.formatDecimal(report.collectionRate, 1, 2) + '% Recovery Rate'}">0%</span>
+                </div>
+            </div>
+            <div class="stat-card pending">
+                <div>
+                    <p class="stat-label">Total Pending</p>
+                    <p class="stat-value"
+                        th:text="${'₹' + #numbers.formatDecimal(report.totalPending, 1, 'COMMA', 2, 'POINT')}">₹0.00</p>
+                </div>
+                <div class="stat-trend trend-down">
+                    <i data-lucide="clock" style="width: 14px; height: 14px; vertical-align: middle;"></i>
+                    <span>Outstanding Dues</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- EMI Management Table -->
+        <div class="card-table-wrapper">
+            <div class="card-table-header">
+                <div>
+                    <h2 class="table-title">Unified EMI Management</h2>
+                    <div style="margin-top: 0.5rem; position: relative; max-width: 300px;">
+                        <i data-lucide="search"
+                            style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; color: var(--secondary);"></i>
+                        <input type="text" id="reportSearch" placeholder="Filter by borrower or loan..."
+                            style="padding: 0.625rem 1rem 0.625rem 2.5rem; border: 1px solid var(--border); border-radius: var(--radius-md); font-size: 0.8125rem; width: 100%;"
+                            onkeyup="filterReports()">
+                    </div>
+                </div>
+                <div style="display: flex; gap: 0.75rem;">
+                    <button onclick="filterStatus('PENDING')" class="btn-outline"
+                        style="font-size: 0.75rem; padding: 0.5rem 0.75rem;">Show Pending</button>
+                    <button onclick="filterStatus('PAID')" class="btn-outline"
+                        style="font-size: 0.75rem; padding: 0.5rem 0.75rem;">Show Paid</button>
+                    <button onclick="filterStatus('ALL')" class="btn-outline"
+                        style="font-size: 0.75rem; padding: 0.5rem 0.75rem;">Reset</button>
+                </div>
+            </div>
+            <div style="overflow-x: auto;">
+                <table class="custom-table" id="reportTable">
+                    <thead>
+                        <tr>
+                            <th>Due Date</th>
+                            <th>Borrower</th>
+                            <th>Loan Type</th>
+                            <th>EMI Amount</th>
+                            <th>Status</th>
+                            <th style="text-align: right;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="p : ${report.payments}"
+                            th:classappend="${p.status == 'PENDING' and p.dueDate.isBefore(T(java.time.LocalDate).now()) ? 'row-overdue' : ''}">
+                            <td>
+                                <div style="display: flex; flex-direction: column;">
+                                    <span class="fw-600" th:text="${#temporals.format(p.dueDate, 'dd MMM yyyy')}">01 Jan
+                                        2024</span>
+                                    <span
+                                        th:if="${p.status == 'PENDING' and p.dueDate.isBefore(T(java.time.LocalDate).now())}"
+                                        style="font-size: 0.65rem; color: var(--danger); font-weight: 700;">OVERDUE</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <div class="avatar-circle"
+                                        style="width: 24px; height: 24px; font-size: 0.65rem; background: var(--secondary);">
+                                        <span
+                                            th:text="${#strings.substring(p.loan.user.name, 0, 1).toUpperCase()}">U</span>
+                                    </div>
+                                    <span class="fw-600" th:text="${p.loan.user.name}">John Doe</span>
+                                </div>
+                            </td>
+                            <td th:text="${p.loan.loanType}">Personal Loan</td>
+                            <td class="fw-700"
+                                th:text="${'₹' + #numbers.formatDecimal(p.loan.emiAmount, 1, 'COMMA', 2, 'POINT')}">
+                                ₹0.00</td>
+                            <td>
+                                <span th:if="${p.status == 'PAID'}" class="badge badge-paid">PAID</span>
+                                <span th:if="${p.status == 'PENDING'}" class="badge badge-pending">PENDING</span>
+                            </td>
+                            <td style="text-align: right;">
+                                <a th:if="${p.status == 'PENDING'}"
+                                    th:href="@{'/loan/' + ${p.loan.loanId} + '/emipayment'}" class="btn-primary"
+                                    style="padding: 0.4rem 0.75rem; font-size: 0.75rem;">
+                                    <i data-lucide="credit-card" style="width: 14px; height: 14px;"></i>
+                                    <span>Collect</span>
+                                </a>
+                                <span th:if="${p.status == 'PAID'}"
+                                    style="font-size: 0.75rem; color: var(--success); font-weight: 600;">
+                                    <i data-lucide="check"
+                                        style="width: 14px; height: 14px; vertical-align: middle;"></i> Collected
+                                </span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <script>
+            function filterReports() {
+                const query = document.getElementById('reportSearch').value.toLowerCase();
+                const rows = document.querySelectorAll('#reportTable tbody tr');
+                rows.forEach(row => {
+                    const text = row.innerText.toLowerCase();
+                    row.style.display = text.includes(query) ? '' : 'none';
+                });
+            }
+
+            function filterStatus(status) {
+                const rows = document.querySelectorAll('#reportTable tbody tr');
+                rows.forEach(row => {
+                    if (status === 'ALL') {
+                        row.style.display = '';
+                    } else {
+                        const rowStatus = row.querySelector('.badge').innerText;
+                        row.style.display = rowStatus === status ? '' : 'none';
+                    }
+                });
+            }
+        </script>
+
+        <style>
+            .row-overdue {
+                background-color: #fff1f2 !important;
+            }
+
+            .row-overdue:hover {
+                background-color: #ffe4e6 !important;
+            }
+        </style>
+    </section>
+</body>
+
+</html>

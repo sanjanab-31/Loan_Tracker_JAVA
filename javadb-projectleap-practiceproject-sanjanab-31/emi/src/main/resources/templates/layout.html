@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:fragment="layout(content, title, activeItem)">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${title + ' | LoanTracker'}">LoanTracker</title>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+
+<body>
+    <div class="app-wrapper">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div
+                    style="background: var(--primary); width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                    <i data-lucide="piggy-bank" style="color: white; width: 18px; height: 18px;"></i>
+                </div>
+                <a th:href="@{/}" class="sidebar-logo">LoanTracker</a>
+            </div>
+            <nav class="sidebar-nav">
+                <a th:href="@{/}" class="nav-link" th:classappend="${activeItem == 'dashboard' ? 'active' : ''}">
+                    <i data-lucide="layout-dashboard" style="width: 18px; height: 18px;"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a th:href="@{/}" class="nav-link" th:classappend="${activeItem == 'users' ? 'active' : ''}">
+                    <i data-lucide="users" style="width: 18px; height: 18px;"></i>
+                    <span>Users</span>
+                </a>
+                <a th:href="@{/loans}" class="nav-link" th:classappend="${activeItem == 'loans' ? 'active' : ''}">
+                    <i data-lucide="credit-card" style="width: 18px; height: 18px;"></i>
+                    <span>Loans</span>
+                </a>
+                <a th:href="@{/reports}" class="nav-link" th:classappend="${activeItem == 'reports' ? 'active' : ''}">
+                    <i data-lucide="bar-chart-3" style="width: 18px; height: 18px;"></i>
+                    <span>Reports</span>
+                </a>
+            </nav>
+            <div class="profile-section">
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <div class="avatar-circle" style="background: var(--primary);">
+                        <span>AU</span>
+                    </div>
+                    <div>
+                        <p style="font-size: 0.8125rem; font-weight: 700; color: white; margin: 0;">Admin User</p>
+                        <p style="font-size: 0.6875rem; color: var(--secondary); margin: 0;">Loan Manager</p>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="top-nav">
+                <h1 class="page-title" th:text="${title}">Dashboard</h1>
+                <div style="display: flex; gap: 1rem;">
+                    <button class="btn-outline" style="padding: 0.5rem; border-radius: var(--radius-full);">
+                        <i data-lucide="search" style="width: 18px; height: 18px;"></i>
+                    </button>
+                    <button class="btn-outline" style="padding: 0.5rem; border-radius: var(--radius-full);">
+                        <i data-lucide="bell" style="width: 18px; height: 18px;"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Page Content -->
+            <div th:replace="${content}"></div>
+        </main>
+    </div>
+
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+    </script>
+</body>
+
+</html>
