@@ -1,5 +1,5 @@
 {
   "rewrites": [
-    { "source": "/(.*)", "destination": "/" }
+    { "source": "/(.*)", "destination": "/javadb-projectleap-practiceproject-sanjanab-31/emi/src/main/resources/templates/index.html" }
   ]
 }
