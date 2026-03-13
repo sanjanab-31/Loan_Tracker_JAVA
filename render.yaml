@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: loan-tracker-java
+    runtime: docker
+    # Specify the directory containing the Dockerfile and pom.xml
+    dockerContext: javadb-projectleap-practiceproject-sanjanab-31/emi
+    dockerfilePath: Dockerfile
+    envVars:
+      - key: PORT
+        value: 8081
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
